@@ -1,3 +1,4 @@
+package M2;
 import java.util.Arrays;
 
 public class Problem1 {
@@ -17,10 +18,17 @@ public class Problem1 {
         System.out.println("Processing Array:" + Arrays.toString(arr));
         System.out.println("Odds output:");
         //TODO add/edit code here
+        //nd367, 6/4/2023, outputting odd values only
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] % 2 != 0) {
+                System.out.println(arr[i]);
+            }
+        }
         
         //end add/edit section
         System.out.println();
         System.out.println("End process");
     }
+    
     
 }

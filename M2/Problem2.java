@@ -1,5 +1,5 @@
+package M2;
 import java.util.Arrays;
-
 public class Problem2 {
     public static void main(String[] args) {
         //Don't edit anything here
@@ -18,12 +18,18 @@ public class Problem2 {
         double total = 0;
         String totalOutput = "";
         //TODO add/edit code here
+        //nd367, 6/5/2023, Only output the sum/total of the array values
+
+        for (double i : arr)
+            total += i;
        
         //set the double to a string variable
         totalOutput = total+"";
         //end add/edit section
-        System.out.println("Total is " + totalOutput);
+        String onlyTwoDecimal = String.format("%1.2f", total);
+        System.out.println("Total is " + onlyTwoDecimal);
         System.out.println("End process");
     }
+    
     
 }
