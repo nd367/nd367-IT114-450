@@ -130,12 +130,29 @@ public class NumberGuesser4 {
         } else {
             System.out.println("That's wrong");
             strikes++;
+            //nd367, 6/12/2023, Display higher or lower as a hint after a wrong guess
+            if (guess > number) {
+                System.out.println("Hint: Answer is too high!");
+            } else {
+                System.out.println("Hint: Answer is too low!");
+            }
+
+            //nd367, 6/12/2023, Display a cold, warm, hot indicator based on how close to the correct value the guess is
+            if ((guess > number) & (guess < number + 3)  | (guess < number) & (guess > number -3 )) {
+                System.out.println("Hot or Cold: Hot! You are close to the correct answer!");
+            } else if ((guess > number + 2 & guess < number +5 )| (guess < number -2 & guess > number -5)) {
+                System.out.println("Hot or Cold: Getting warm!");
+            } else {
+                System.out.println("Hot or Cold: Cold! You are far away from the answer!");
+            }
+        }
+
             if (strikes >= maxStrikes) {
                 lose();
                 pickNewRandom = true;
             }
         }
-    }
+    
 
     private int strToNum(String message) {
         int guess = -1;
