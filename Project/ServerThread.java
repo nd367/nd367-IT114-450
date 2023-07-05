@@ -8,7 +8,7 @@ import java.net.Socket;
 /**
  * A server-side representation of a single client
  */
-public class ServerThread {
+public class ServerThread extends Thread{
     private Socket client;
     private String clientName;
     private boolean isRunning = false;
