@@ -225,13 +225,21 @@ public class ServerThread extends Thread{
             case READY:
                 // ((GameRoom) currentRoom).setReady(myClientId);
                 break;
+//nd367, 7/15/23, adding Roll and Flip
+            case ROLL:
+                getCurrentRoom().rolling(this, p.getMessage());
+                //handleRollCommand(p.getMessage());
+                break;
+            case FLIP:
+                getCurrentRoom().flipping(this);
+                //handleFlipCommand();
+                break;
             default:
                 break;
 
         }
 
     }
-
     private void cleanup() {
         logger.info("Thread cleanup() start");
         try {

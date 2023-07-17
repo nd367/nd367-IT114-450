@@ -203,10 +203,17 @@ public enum Client {
 
     protected void sendMessage(String message) throws IOException {
         Payload p = new Payload();
-        p.setPayloadType(PayloadType.MESSAGE);
-        p.setMessage(message);
-        p.setClientName(clientName);
-        out.writeObject(p);
+//nd367, 7/15/23 setting roll and flip command to their payloadType
+        if (message.startsWith("/flip")) {
+            p.setPayloadType(PayloadType.FLIP);
+        } else if(message.startsWith("/roll")) {
+            p.setPayloadType(PayloadType.ROLL);
+        } else {
+            p.setPayloadType(PayloadType.MESSAGE);
+        }
+            p.setMessage(message);
+            p.setClientName(clientName);
+            out.writeObject(p);
     }
 
     // end send methods

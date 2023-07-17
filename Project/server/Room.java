@@ -95,7 +95,86 @@ public class Room implements AutoCloseable {
             close();
         }
     }
+    //nd367, 7/16/23, format styles 
+    String formatStyle(String message) {
+        String formatresult = message;
+        //bold
+        if(formatresult.contains("*")) {
+            formatresult = formatresult.replaceAll("\\*(.*?)\\*", "<b>$1</b>");
+        }
+        //underline
+        if(formatresult.contains("_")) {
+            formatresult = formatresult.replaceAll("_(.*?)_", "<u>$1</u>");
+        }
+        //italic
+        if(formatresult.contains("-")) {
+            formatresult = formatresult.replaceAll("-([^-]+)", "<i>$1</i>");
+        }
+        //red color
+       
+        formatresult = formatresult.replaceAll("#r(.*?)#r", "<font color='red'>$1</font>");
 
+        //blue color
+        formatresult = formatresult.replaceAll("#b(.*?)#b", "<font color='blue'>$1</font>");
+
+        //green
+        formatresult = formatresult.replaceAll("#g(.*?)#g", "<font color='green'>$1</font>");
+
+        
+    return formatresult;
+        
+    }
+
+
+	//nd367, 7/15/23, Flipping & Rolling
+        //Flipping
+        public void flipping(ServerThread client) {
+            String result = (Math.random() < 0.5) ? "Heads" : "Tails";
+            String message = client.getClientName() + " flipped: " + result;
+            sendMessage(message);
+        }
+
+        //rolling
+        public void rolling(ServerThread client, String message) {
+            // first format /roll 0-X or 1-X
+            String[] cParts = message.split(" ");
+            if (cParts.length == 2) {
+                try {
+                    int maxNum = Integer.parseInt(cParts[1]);
+                    int randomNum = (int) (Math.random() * maxNum) + 1;
+                    String result = client.getClientName() + " rolled: " + randomNum;
+                    sendMessage(result);
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                String errorMSG = "Wrong format";
+                sendMessage(errorMSG);
+            }
+        }
+        //rolling second format /roll #d#
+        public void rolling2(ServerThread client, String message) {
+            String[] cParts = message.split(" ");
+            if (cParts.length == 2 && cParts[1].contains("d")) {
+                try {
+                    int rollnum1 = Integer.parseInt(cParts[1].split("d")[0]);
+                    int rollnum2 = Integer.parseInt(cParts[1].split("d")[1]);
+                    StringBuilder rollResult = new StringBuilder(client.getClientName() + " rolled: ");
+                    int total = 0;
+                    for (int i = 0; i < rollnum1; i++) {
+                        int roll = (int) (Math.random() * rollnum2) + 1;
+                        total += roll;
+                        rollResult.append(roll).append(" ");
+                    }
+                    sendMessage(rollResult.toString());
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                String errorMsg = "Wrong format";
+                sendMessage(errorMsg);
+            }
+        }
     /***
      * Helper function to process messages to trigger different functionality.
      * 
@@ -187,15 +266,31 @@ public class Room implements AutoCloseable {
             return;
         }
         logger.info(String.format("Sending message to %s clients", clients.size()));
+        //nd367, 7/16/2023, sending formatted message
+        boolean isFormatted = false;
+        String formatMessage = formatStyle(message);
+        if (!formatMessage.equals(message)) {
+            isFormatted = true;
+        }
+
+
         if (sender != null && processCommands(message, sender)) {
             // it was a command, don't broadcast
             return;
         }
+
         long from = sender == null ? Constants.DEFAULT_CLIENT_ID : sender.getClientId();
         Iterator<ServerThread> iter = clients.iterator();
         while (iter.hasNext()) {
             ServerThread client = iter.next();
-            boolean messageSent = client.sendMessage(from, message);
+            //nd367, 7/16/2023, sending formatted message
+            boolean messageSent;
+            if (isFormatted) {
+                messageSent = client.sendMessage(from, formatMessage);
+            } else {
+                messageSent = client.sendMessage(from, message);
+            }
+			//boolean messageSent = client.sendMessage(from, message);
             if (!messageSent) {
                 handleDisconnect(iter, client);
             }
@@ -222,6 +317,13 @@ public class Room implements AutoCloseable {
         sendMessage(null, client.getClientName() + " disconnected");
         checkClients();
     }
+    //nd367, 7/15/2023, sendMessage method for roll and flip
+     public void sendMessage(String message) {
+        for (ServerThread client : clients) {
+            client.sendMessage(client.getClientId(), message);
+        }
+    }
+    
 
     public void close() {
         Server.INSTANCE.removeRoom(this);
