@@ -15,9 +15,6 @@ import Project.common.Payload;
 import Project.common.PayloadType;
 //import Project.common.PositionPayload;
 import Project.common.RoomResultPayload;
-//import Project.common.Character.CharacterType;
-//import Project.common.CellPayload;
-//import Project.common.Character;
 
 
 public enum Client {
