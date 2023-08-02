@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,6 +18,25 @@ import Project.common.RoomResultPayload;
  * A server-side representation of a single client
  */
 public class ServerThread extends Thread{
+
+    //nd367, 7/30/23 adding list for mute/unmute
+    private List<String> mutedUsers = new ArrayList<>();
+ 
+    //nd367, 7/30/23 checking if user is muted
+    public boolean mutedCheck(String username) {
+        return mutedUsers.contains(username);
+    }
+    //nd367, 7/30/23 adding username to list if muted
+    public void muteUser(String username) {
+        if (!mutedUsers.contains(username)) {
+            mutedUsers.add(username);
+        }
+    }
+    //nd367, 7/30/23 removing username from list if unmuted
+    public void unmuteUser(String username) {
+        mutedUsers.remove(username);
+    }
+
     private Socket client;
     private String clientName;
     private boolean isRunning = false;
@@ -25,7 +46,8 @@ public class ServerThread extends Thread{
     private Room currentRoom;
     private static Logger logger = Logger.getLogger(ServerThread.class.getName());
     private long myClientId;
-
+    public Object getMutedUsers;
+    
     public void setClientId(long id) {
         myClientId = id;
     }
@@ -248,5 +270,8 @@ public class ServerThread extends Thread{
             logger.info("Client already closed");
         }
         logger.info("Thread cleanup() complete");
+    }
+
+    public void sendMessage(String clientName2, String message) {
     }
 }

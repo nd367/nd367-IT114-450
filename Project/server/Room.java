@@ -1,10 +1,12 @@
 package Project.server;
 
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
+import Project.client.User;
 import Project.common.Constants;
 
 public class Room implements AutoCloseable {
@@ -12,6 +14,8 @@ public class Room implements AutoCloseable {
     // protected static Server server;// used to refer to accessible server
     // functions
     private String name;
+
+
     private List<ServerThread> clients = new ArrayList<ServerThread>();
     private boolean isRunning = false;
     // Commands
@@ -21,6 +25,10 @@ public class Room implements AutoCloseable {
     private final static String DISCONNECT = "disconnect";
     private final static String LOGOUT = "logout";
     private final static String LOGOFF = "logoff";
+    private final static String ROLL = "roll";
+    private final static String FLIP = "flip";
+    private final static String MUTE = "mute";
+    private final static String UNMUTE = "unmute";
     private static Logger logger = Logger.getLogger(Room.class.getName());
 
     public Room(String name) {
@@ -108,7 +116,7 @@ public class Room implements AutoCloseable {
         }
         //italic
         if(formatresult.contains("-")) {
-            formatresult = formatresult.replaceAll("-([^-]+)", "<i>$1</i>");
+            formatresult = formatresult.replaceAll("-([^-]+)-", "<i>$1</i>");
         }
         //red color
        
@@ -130,40 +138,89 @@ public class Room implements AutoCloseable {
         //Flipping
         public void flipping(ServerThread client) {
             String result = (Math.random() < 0.5) ? "Heads" : "Tails";
-            String message = client.getClientName() + " flipped: " + result;
-            sendMessage(message);
+            //nd367, 7/25/2023, output in different format (italicize) with html <i> and </i>
+            String message = "<i>" + client.getClientName() + " flipped a coin and got " + result + "!" + "</i>"; 
+            sendMessage(null, message);
         }
 
-        //rolling
+    
+        // nd367, 7/27/23 rolling handling first and second format. Fixing so both formats work. The second format was not working properly before
+        // first format /roll 0-X or 1-X and second format is /roll #d#
         public void rolling(ServerThread client, String message) {
-            // first format /roll 0-X or 1-X
+            String[] cParts = message.split(" ");
+            if (cParts.length == 2) {
+                try {
+                    if (cParts[1].contains("d")) {
+                        String[] rollParts = cParts[1].split("d");
+                        if (rollParts.length == 2) {
+                            int rollnum1 = Integer.parseInt(rollParts[0]);
+                            int rollnum2 = Integer.parseInt(rollParts[1]);
+                            int total = 0;
+                            for (int i = 0; i < rollnum1; i++) {
+                                int roll = (int) (Math.random() * rollnum2) + 1;
+                                total += roll;
+                            }
+                            //nd367, 7/25/23, bolding output with html <b> and </b>
+                            String result = "<b>" + client.getClientName() + " rolled " + rollnum1 + "d" + rollnum2 + " and got " + total + "!" +"</b>";
+                            sendMessage(null, result);
+                        } else {
+                            String errorMsg = "<b>Wrong format</b>";
+                            sendMessage(null, errorMsg);
+                        }
+                    } else {
+                        int maxNum = Integer.parseInt(cParts[1]);
+                        int randomNum = (int) (Math.random() * maxNum) + 1;
+                        //nd367, 7/25/23, bolding output with html <b> and <b/>
+                        String result = "<b>" + client.getClientName() + " rolled " + maxNum + " and got " + randomNum + "!" + "</b>";
+                        sendMessage(null, result);
+                    }
+                } catch (NumberFormatException e) {
+                    String errorMsg = "<b>Error</b>";
+                    sendMessage(null, errorMsg);
+                    e.printStackTrace();
+                }
+            } else {
+                String errorMsg = "<b>Wrong format</b>";
+                sendMessage(null, errorMsg);
+            }
+        }
+
+            /* 
+            //first format /roll 0-X or 1-X
             String[] cParts = message.split(" ");
             if (cParts.length == 2) {
                 try {
                     int maxNum = Integer.parseInt(cParts[1]);
                     int randomNum = (int) (Math.random() * maxNum) + 1;
-                    String result = client.getClientName() + " rolled: " + randomNum;
+                    String result = "<b>" + client.getClientName() + " rolled: " + randomNum + "</b>";
                     sendMessage(result);
                 } catch (NumberFormatException e) {
+                    //adding
+                    String errorMSG = "<b>Invalid roll</b>";
+                    sendMessage(errorMSG);
+                    //
                     e.printStackTrace();
                 }
             } else {
-                String errorMSG = "Wrong format";
+                String errorMSG = "<b>Wrong format</b>";
                 sendMessage(errorMSG);
             }
         }
-        //rolling second format /roll #d#
+         */
+        //rolling second format /roll #d#    
+        /* 
         public void rolling2(ServerThread client, String message) {
             String[] cParts = message.split(" ");
             if (cParts.length == 2 && cParts[1].contains("d")) {
+                
                 try {
                     int rollnum1 = Integer.parseInt(cParts[1].split("d")[0]);
                     int rollnum2 = Integer.parseInt(cParts[1].split("d")[1]);
                     StringBuilder rollResult = new StringBuilder(client.getClientName() + " rolled: ");
-                    int total = 0;
+                    
                     for (int i = 0; i < rollnum1; i++) {
                         int roll = (int) (Math.random() * rollnum2) + 1;
-                        total += roll;
+                    
                         rollResult.append(roll).append(" ");
                     }
                     sendMessage(rollResult.toString());
@@ -175,6 +232,8 @@ public class Room implements AutoCloseable {
                 sendMessage(errorMsg);
             }
         }
+        */
+
     /***
      * Helper function to process messages to trigger different functionality.
      * 
@@ -208,6 +267,37 @@ public class Room implements AutoCloseable {
                     case LOGOFF:
                         Room.disconnectClient(client, this);
                         break;
+                        //nd367, 7/25/2023, calls the rolling method (both formats). 
+                    case ROLL:
+                        rolling(client, message);
+                        break;
+                        //nd367, 7/25/2023, calls the flipping method
+                    case FLIP:
+                        flipping(client);
+                        break;
+                    case MUTE: //nd367, 7/29/23, adding Mute and Unmute case 
+                        if (comm2.length >= 2) {
+                            String muteTarget = comm2[1];
+                            client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You muted " + muteTarget);
+                            client.muteUser(muteTarget);
+                        } else {
+                            client.sendMessage(Constants.DEFAULT_CLIENT_ID, "Wrong format");
+                        }
+                        break;
+                    case UNMUTE:
+                        if (comm2.length >= 2) {
+                            String unmuteTarget = comm2[1];
+                            if (client.mutedCheck(unmuteTarget)) {
+                                client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You unmuted " + unmuteTarget);
+                                client.unmuteUser(unmuteTarget);
+                            } else {
+                                client.sendMessage(Constants.DEFAULT_CLIENT_ID, unmuteTarget + " is not muted.");
+                            }
+                        } else {
+                            client.sendMessage(Constants.DEFAULT_CLIENT_ID, "Wrong format");
+                        }
+                        break;
+                        
                     default:
                         wasCommand = false;
                         break;
@@ -261,10 +351,39 @@ public class Room implements AutoCloseable {
      * @param sender  The client sending the message
      * @param message The message to broadcast inside the room
      */
+
     protected synchronized void sendMessage(ServerThread sender, String message) {
         if (!isRunning) {
             return;
         }
+
+        //nd367, 7/28/23, checking for whisper message
+        if (message.startsWith("@")) {
+            
+            int spaceAfterUsername = message.indexOf(" ");
+            String whisperUsername = message.substring(1, spaceAfterUsername);
+            String whisperMessage = message.substring(spaceAfterUsername + 1);
+ 
+            ServerThread whisperedUser = null;
+            for (ServerThread client : clients) {
+                if (client.getClientName().equalsIgnoreCase(whisperUsername)) {
+                    whisperedUser = client;
+                    break;
+                }
+            }
+
+            if (whisperedUser != null) {
+                whisperedUser.sendMessage(sender.getClientId(), "You received a whispered message: " + whisperMessage);
+                sender.sendMessage(sender.getClientId(), "You whispered to "+ whisperedUser.getClientName() + ": " + whisperMessage);
+            } else {
+                sender.sendMessage(sender.getClientId(), "User not found");
+            }
+            
+            return;
+                
+        }
+        
+
         logger.info(String.format("Sending message to %s clients", clients.size()));
         //nd367, 7/16/2023, sending formatted message
         boolean isFormatted = false;
@@ -273,7 +392,6 @@ public class Room implements AutoCloseable {
             isFormatted = true;
         }
 
-
         if (sender != null && processCommands(message, sender)) {
             // it was a command, don't broadcast
             return;
@@ -281,8 +399,14 @@ public class Room implements AutoCloseable {
 
         long from = sender == null ? Constants.DEFAULT_CLIENT_ID : sender.getClientId();
         Iterator<ServerThread> iter = clients.iterator();
-        while (iter.hasNext()) {
+        while (iter.hasNext()) {   
             ServerThread client = iter.next();
+
+            //nd367, 8/1/23, does not send message to the muter
+            if (client.mutedCheck(sender.getClientName())) {
+                continue;
+            }
+            
             //nd367, 7/16/2023, sending formatted message
             boolean messageSent;
             if (isFormatted) {
@@ -290,13 +414,14 @@ public class Room implements AutoCloseable {
             } else {
                 messageSent = client.sendMessage(from, message);
             }
-			//boolean messageSent = client.sendMessage(from, message);
             if (!messageSent) {
                 handleDisconnect(iter, client);
             }
         }
+     
+        
     }
-
+           
     protected synchronized void sendConnectionStatus(ServerThread sender, boolean isConnected) {
         Iterator<ServerThread> iter = clients.iterator();
         while (iter.hasNext()) {
@@ -317,13 +442,6 @@ public class Room implements AutoCloseable {
         sendMessage(null, client.getClientName() + " disconnected");
         checkClients();
     }
-    //nd367, 7/15/2023, sendMessage method for roll and flip
-     public void sendMessage(String message) {
-        for (ServerThread client : clients) {
-            client.sendMessage(client.getClientId(), message);
-        }
-    }
-    
 
     public void close() {
         Server.INSTANCE.removeRoom(this);
