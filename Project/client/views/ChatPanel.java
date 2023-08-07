@@ -33,6 +33,7 @@ public class ChatPanel extends JPanel {
     private JPanel chatArea = null;
     private UserListPanel userListPanel;
 
+
     public ChatPanel(ICardControls controls) {
         super(new BorderLayout(10, 10));
         JPanel wrapper = new JPanel();
@@ -121,6 +122,7 @@ public class ChatPanel extends JPanel {
             }
 
         });
+
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -141,6 +143,7 @@ public class ChatPanel extends JPanel {
             }
         });
     }
+
 
     public void addUserListItem(long clientId, String clientName) {
         userListPanel.addUserListItem(clientId, clientName);

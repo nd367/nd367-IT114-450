@@ -8,11 +8,11 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
@@ -164,6 +164,7 @@ public class ClientUI extends JFrame implements IClientEvents, ICardControls {
         }
         return clientName;
     }
+
 
     /**
      * Used to handle new client connects/disconnects or existing client lists (one
