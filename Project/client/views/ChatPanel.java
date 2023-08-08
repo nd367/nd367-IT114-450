@@ -9,6 +9,8 @@ import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,6 +19,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -32,6 +35,7 @@ public class ChatPanel extends JPanel {
     private static Logger logger = Logger.getLogger(ChatPanel.class.getName());
     private JPanel chatArea = null;
     private UserListPanel userListPanel;
+
 
     public ChatPanel(ICardControls controls) {
         super(new BorderLayout(10, 10));
@@ -94,6 +98,14 @@ public class ChatPanel extends JPanel {
                 e1.printStackTrace();
             }
         });
+
+        //nd367, 8/6/23 export chat button
+        JButton exportButton = new JButton("Export");
+        exportButton.addActionListener((event) -> {
+            exportChat();
+        });
+
+        input.add(exportButton);
         chatArea = content;
         input.add(button);
         userListPanel = new UserListPanel(controls);
@@ -121,6 +133,7 @@ public class ChatPanel extends JPanel {
             }
 
         });
+
         this.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -141,6 +154,30 @@ public class ChatPanel extends JPanel {
             }
         });
     }
+
+    //nd367, 8/6/23, method for exporting chat history and saving to a file
+
+     public void exportChat() {
+        StringBuilder chatHistory = new StringBuilder();
+        for (Component component : chatArea.getComponents()) {
+            if (component instanceof JEditorPane) {
+                JEditorPane textContainer = (JEditorPane) component;
+                String chat_message = textContainer.getText();
+                chatHistory.append(chat_message).append("<br>");
+            }
+        }
+
+        try {
+            File newFile = new File("chat_history.html");
+            FileWriter writer = new FileWriter(newFile);
+            writer.write(chatHistory.toString());
+            writer.close();
+            JOptionPane.showMessageDialog(this, "Chat history exported to chat_history.html");
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error: Could not export!");
+        }
+     }
 
     public void addUserListItem(long clientId, String clientName) {
         userListPanel.addUserListItem(clientId, clientName);

@@ -1,5 +1,8 @@
 package Project.server;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -27,14 +30,45 @@ public class ServerThread extends Thread{
         return mutedUsers.contains(username);
     }
     //nd367, 7/30/23 adding username to list if muted
-    public void muteUser(String username) {
+    public void muteUser(String username, ServerThread muter) {
         if (!mutedUsers.contains(username)) {
             mutedUsers.add(username);
+            saveMuted(); //nd367, 8/7/23, calling saveMuted
+
+            //nd367, 8/8/23, sending mute notifictaion 
+            currentRoom.muteNote(username, muter.getClientName(), true);
         }
     }
     //nd367, 7/30/23 removing username from list if unmuted
-    public void unmuteUser(String username) {
+    public void unmuteUser(String username, ServerThread unmuter) {
         mutedUsers.remove(username);
+        saveMuted(); //nd367, 8/7/23, calling saveMuted
+
+        //nd367, 8/8/23, sending mute notifictaion 
+       currentRoom.muteNote(username, unmuter.getClientName(), false);
+    }
+    //private String muteListFilePath = "mute_list.csv";
+    //nd367, 8/7/23, saving muted users to json file
+    private void saveMuted() {
+        try (FileWriter writer = new FileWriter("mute_list.csv")) {
+            for (String username : mutedUsers) {
+                writer.write(username);
+                writer.write("\n");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadMuted() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("mute_list.csv"))) {
+            String username;
+            while ((username = reader.readLine()) != null) {
+                mutedUsers.add(username);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private Socket client;
@@ -65,6 +99,8 @@ public class ServerThread extends Thread{
         // get communication channels to single client
         this.client = myClient;
         this.currentRoom = room;
+
+        loadMuted();  //nd367, 8/7/23, loading already muted users
 
     }
 
@@ -247,7 +283,7 @@ public class ServerThread extends Thread{
             case READY:
                 // ((GameRoom) currentRoom).setReady(myClientId);
                 break;
-//nd367, 7/15/23, adding Roll and Flip
+                //nd367, 7/15/23, adding Roll and Flip
             case ROLL:
                 getCurrentRoom().rolling(this, p.getMessage());
                 //handleRollCommand(p.getMessage());
