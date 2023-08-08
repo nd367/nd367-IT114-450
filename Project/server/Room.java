@@ -77,6 +77,28 @@ public class Room implements AutoCloseable {
         checkClients();
     }
 
+    ///nd367, 8/8/23, adding getClientByUsername for mute notification
+    public ServerThread getClientByUsername(String username) {
+        for (ServerThread client : clients) {
+            if (client.getClientName().equalsIgnoreCase(username)) {
+                return client;
+            }
+        }
+        return null;
+    }
+    
+    //nd367, 8/8/23, sending mute notification
+    protected synchronized void muteNote(String targetUsername, String muterUsername, boolean notifyMuted) {
+        ServerThread target = getClientByUsername(targetUsername);
+        if (target != null){
+            String notify = notifyMuted ? "muted" : "unmuted";
+            String notifyMessage = muterUsername + " " + notify + " you";
+            target.sendMessage(Constants.DEFAULT_CLIENT_ID, notifyMessage);
+        }
+    }
+    
+
+
     private void syncCurrentUsers(ServerThread client) {
         Iterator<ServerThread> iter = clients.iterator();
         while (iter.hasNext()) {
@@ -185,55 +207,6 @@ public class Room implements AutoCloseable {
             }
         }
 
-            /* 
-            //first format /roll 0-X or 1-X
-            String[] cParts = message.split(" ");
-            if (cParts.length == 2) {
-                try {
-                    int maxNum = Integer.parseInt(cParts[1]);
-                    int randomNum = (int) (Math.random() * maxNum) + 1;
-                    String result = "<b>" + client.getClientName() + " rolled: " + randomNum + "</b>";
-                    sendMessage(result);
-                } catch (NumberFormatException e) {
-                    //adding
-                    String errorMSG = "<b>Invalid roll</b>";
-                    sendMessage(errorMSG);
-                    //
-                    e.printStackTrace();
-                }
-            } else {
-                String errorMSG = "<b>Wrong format</b>";
-                sendMessage(errorMSG);
-            }
-        }
-         */
-        //rolling second format /roll #d#    
-        /* 
-        public void rolling2(ServerThread client, String message) {
-            String[] cParts = message.split(" ");
-            if (cParts.length == 2 && cParts[1].contains("d")) {
-                
-                try {
-                    int rollnum1 = Integer.parseInt(cParts[1].split("d")[0]);
-                    int rollnum2 = Integer.parseInt(cParts[1].split("d")[1]);
-                    StringBuilder rollResult = new StringBuilder(client.getClientName() + " rolled: ");
-                    
-                    for (int i = 0; i < rollnum1; i++) {
-                        int roll = (int) (Math.random() * rollnum2) + 1;
-                    
-                        rollResult.append(roll).append(" ");
-                    }
-                    sendMessage(rollResult.toString());
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                String errorMsg = "Wrong format";
-                sendMessage(errorMsg);
-            }
-        }
-        */
-
     /***
      * Helper function to process messages to trigger different functionality.
      * 
@@ -279,7 +252,7 @@ public class Room implements AutoCloseable {
                         if (comm2.length >= 2) {
                             String muteTarget = comm2[1];
                             client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You muted " + muteTarget);
-                            client.muteUser(muteTarget);
+                            client.muteUser(muteTarget, client);
                         } else {
                             client.sendMessage(Constants.DEFAULT_CLIENT_ID, "Wrong format");
                         }
@@ -289,7 +262,7 @@ public class Room implements AutoCloseable {
                             String unmuteTarget = comm2[1];
                             if (client.mutedCheck(unmuteTarget)) {
                                 client.sendMessage(Constants.DEFAULT_CLIENT_ID, "You unmuted " + unmuteTarget);
-                                client.unmuteUser(unmuteTarget);
+                                client.unmuteUser(unmuteTarget, client);
                             } else {
                                 client.sendMessage(Constants.DEFAULT_CLIENT_ID, unmuteTarget + " is not muted.");
                             }
@@ -356,6 +329,11 @@ public class Room implements AutoCloseable {
         if (!isRunning) {
             return;
         }
+
+        //nd367, 8/8/23, highlighting message
+       /*if (lastSender) {
+        message = "<span style='background-color: yellow'><b>" + message + "</b></span>";
+      */
 
         //nd367, 7/28/23, checking for whisper message
         if (message.startsWith("@")) {
