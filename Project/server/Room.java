@@ -162,7 +162,7 @@ public class Room implements AutoCloseable {
             String result = (Math.random() < 0.5) ? "Heads" : "Tails";
             //nd367, 7/25/2023, output in different format (italicize) with html <i> and </i>
             String message = "<i>" + client.getClientName() + " flipped a coin and got " + result + "!" + "</i>"; 
-            sendMessage(null, message);
+            sendMessage(client, message);
         }
 
     
@@ -184,26 +184,26 @@ public class Room implements AutoCloseable {
                             }
                             //nd367, 7/25/23, bolding output with html <b> and </b>
                             String result = "<b>" + client.getClientName() + " rolled " + rollnum1 + "d" + rollnum2 + " and got " + total + "!" +"</b>";
-                            sendMessage(null, result);
+                            sendMessage(client, result);
                         } else {
                             String errorMsg = "<b>Wrong format</b>";
-                            sendMessage(null, errorMsg);
+                            sendMessage(client, errorMsg);
                         }
                     } else {
                         int maxNum = Integer.parseInt(cParts[1]);
                         int randomNum = (int) (Math.random() * maxNum) + 1;
                         //nd367, 7/25/23, bolding output with html <b> and <b/>
                         String result = "<b>" + client.getClientName() + " rolled " + maxNum + " and got " + randomNum + "!" + "</b>";
-                        sendMessage(null, result);
+                        sendMessage(client, result);
                     }
                 } catch (NumberFormatException e) {
                     String errorMsg = "<b>Error</b>";
-                    sendMessage(null, errorMsg);
+                    sendMessage(client, errorMsg);
                     e.printStackTrace();
                 }
             } else {
                 String errorMsg = "<b>Wrong format</b>";
-                sendMessage(null, errorMsg);
+                sendMessage(client, errorMsg);
             }
         }
 
@@ -417,7 +417,7 @@ public class Room implements AutoCloseable {
     private void handleDisconnect(Iterator<ServerThread> iter, ServerThread client) {
         iter.remove();
         logger.info(String.format("Removed client %s", client.getClientName()));
-        sendMessage(null, client.getClientName() + " disconnected");
+        sendMessage(client, client.getClientName() + " disconnected");
         checkClients();
     }
 
